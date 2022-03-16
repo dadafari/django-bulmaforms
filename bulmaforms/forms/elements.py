@@ -24,6 +24,18 @@ class Field(AbstractElement):
         return mark_safe(render_form_field(field))
 
 
+class PlainField(AbstractElement):
+    markup = ''
+
+    def __init__(self, field_name, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.field_name = field_name
+
+    def render(self, field):
+        out = field.as_widget()
+        return mark_safe(out)
+    
+
 class Columns(AbstractElement):
     markup = '<div class="columns is-multiline">{}</div>'
 
