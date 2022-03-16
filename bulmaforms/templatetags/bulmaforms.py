@@ -2,7 +2,8 @@ from django import template
 from django.utils.safestring import mark_safe
 
 from bulmaforms.forms.utils import render_form_field, render_form_generics, render_form_errors
-from bulmaforms.forms.elements import Field
+from bulmaforms.forms.elements import Field, PlainField
+
 
 register = template.Library()
 
@@ -17,8 +18,12 @@ def bulma_form_fields(form):
         widget_classes = list()
 
         # not every form element in bulma has the 'input' css class, so we need to differ here
-        if getattr(field.field.widget, 'input_type', None) not in ['checkbox', 'radio']:
-            widget_classes.append("input")
+        if hasattr(field.field.widget, 'attrs') and 'cols' in field.field.widget.attrs:
+            widget_classes.append("textarea")
+        else:
+            if getattr(field.field.widget, 'input_type', None) not in ['checkbox', 'radio']:
+                widget_classes.append("input")
+            # not every form element in bulma has the 'input' css class, so we need to differ here
 
         # highlight fields with errors
         if field.errors:
@@ -44,7 +49,7 @@ def bulma_form_errors(form):
 
 
 @register.simple_tag(takes_context=True)
-def bulma_form(context, form, submit_text="OK", submit_class="button is-outlined", submit_only_once=True):
+def bulma_form(context, form, submit_text="", submit_class="button is-outlined", submit_only_once=True):
     """Renders whole form, including errors, csrf and a submit button."""
 
     fields = bulma_form_fields(form)
@@ -57,8 +62,8 @@ def render_layout(elements, form):
     element_html = ''
 
     for element in elements:
-
-        if isinstance(element, Field):
+        # DM:Modified added or and PLAINFIELD class
+        if isinstance(element, Field) or isinstance(element, PlainField):
             # if the element itself is an field, give it the form field instance and render it
             element_html += element.render([field for field in form if field.name == element.field_name][0])
         else:
