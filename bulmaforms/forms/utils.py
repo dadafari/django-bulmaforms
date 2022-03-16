@@ -4,6 +4,10 @@ from django.template import defaulttags
 
 
 def render_form_field(field):
+    label_class = 'label'
+    if field.field.required:
+        label_class += ' required'
+        
     try:
         input_type = field.field.widget.input_type
     except AttributeError:
@@ -11,13 +15,22 @@ def render_form_field(field):
 
     if input_type in ['text', 'number', 'email', 'url', 'password']:
         # one of those text-like that support icons
-        out = BulmaFieldMarkup.label(field.label, BulmaFieldMarkup.with_icons(field, field.as_widget()))
+        out = BulmaFieldMarkup.label(
+            field.label,
+            BulmaFieldMarkup.with_icons(field, field.as_widget()),
+            css_class=label_class
+        )
     elif input_type and getattr(BulmaFieldMarkup, input_type, None):
         # something else explicitly defined
         out = getattr(BulmaFieldMarkup, input_type)(field, field.as_widget())
     else:
         # fallback default
-        out = BulmaFieldMarkup.label(field.label, BulmaFieldMarkup.div_control(field.as_widget()))
+
+        out = BulmaFieldMarkup.label(
+            field.label,
+            BulmaFieldMarkup.div_control(field.as_widget()),
+            css_class=label_class
+        )
 
     return BulmaFieldMarkup.div_field(field, out)
 
@@ -118,7 +131,9 @@ def render_form_generics(context, rendered_fields, rendered_errors, submit_text,
             {rendered_errors}
             {rendered_fields}
             {csrf_field}
+            <div class="submit-button">
             <button class="{submit_class}" type="submit">{submit_text}</button>
+            <div/>
         </form>
         """,
         **locals()
